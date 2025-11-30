@@ -2,12 +2,19 @@ import { Badge } from '@/components/ui/badge';
 import { AlertCircle, AlertTriangle, Info } from 'lucide-react';
 
 interface AlertBadgeProps {
-  type: string;
-  severity?: string;
+  alert: {
+    id: string;
+    alert_type: string;
+    severity?: string;
+    server_name?: string;
+    message?: string;
+  };
   className?: string;
 }
 
-export function AlertBadge({ type, severity, className }: AlertBadgeProps) {
+export function AlertBadge({ alert, className }: AlertBadgeProps) {
+  const type = alert.alert_type;
+  const { severity } = alert;
   const getAlertConfig = () => {
     const configs: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ReactNode }> = {
       down: {

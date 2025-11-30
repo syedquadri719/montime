@@ -5,18 +5,19 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 interface MetricChartProps {
   title: string;
-  data: Array<{ timestamp: string; value: number }>;
+  data: Array<any>;
+  metric: 'cpu' | 'memory' | 'disk';
   color?: string;
   unit?: string;
 }
 
-export function MetricChart({ title, data, color = '#3b82f6', unit = '%' }: MetricChartProps) {
+export function MetricChart({ title, data, metric, color = '#3b82f6', unit = '%' }: MetricChartProps) {
   const formattedData = data.map(item => ({
     time: new Date(item.timestamp).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit'
     }),
-    value: item.value
+    value: metric === 'cpu' ? item.cpu_usage : metric === 'memory' ? item.memory_usage : item.disk_usage
   }));
 
   return (
