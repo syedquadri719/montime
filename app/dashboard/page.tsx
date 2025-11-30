@@ -2,8 +2,8 @@ export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
 import { getCurrentUser } from "@/lib/auth";
-import ServerCard from "@/components/server-card";
-import AlertBadge from "@/components/alert-badge";
+import { ServerCard } from "@/components/server-card";
+import { AlertBadge } from "@/components/alert-badge";
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase";
 
@@ -28,7 +28,7 @@ export default async function DashboardPage() {
 
         <button
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow"
-          onClick={() => window.addEventListener("open-add-server", () => {})}
+          onClick={() => window.dispatchEvent(new Event("open-add-server"))}
         >
           + Add Server
         </button>
@@ -53,3 +53,4 @@ export default async function DashboardPage() {
     </div>
   );
 }
+
