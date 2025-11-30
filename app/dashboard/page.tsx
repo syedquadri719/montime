@@ -13,7 +13,7 @@ export default async function DashboardPage() {
 
   const { data: servers } = await supabaseServer
     .from("servers")
-    .select("id, name, last_seen, status");
+    .select("id, name, status, last_seen_at");
 
   const { data: alerts } = await supabaseServer
     .from("alerts")
@@ -53,4 +53,5 @@ export default async function DashboardPage() {
     </div>
   );
 }
+
 
