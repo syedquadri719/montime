@@ -2,8 +2,8 @@ export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
 import { supabaseServer } from "@/lib/supabase";
-import MetricChart from "@/components/metric-chart";
-import AlertBadge from "@/components/alert-badge";
+import { MetricChart } from "@/components/metric-chart";
+import { AlertBadge } from "@/components/alert-badge";
 import Link from "next/link";
 
 export default async function ServerDetailPage({ params }) {
@@ -45,6 +45,7 @@ export default async function ServerDetailPage({ params }) {
         <MetricChart title="Disk Usage" data={metrics} metric="disk" color="#D97706" />
       </div>
 
+      {/* Alerts */}
       <div>
         <h2 className="text-2xl font-semibold text-zinc-300 mb-4">Recent Alerts</h2>
         <div className="space-y-3">
@@ -56,4 +57,5 @@ export default async function ServerDetailPage({ params }) {
     </div>
   );
 }
+
 
