@@ -2,7 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { ServerCard } from "@/components/server-card";
 import { AlertBadge } from "@/components/alert-badge";
 import Link from "next/link";
-import { supabaseServer } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -12,13 +12,13 @@ export default async function DashboardPage() {
   if (!user) return <p className="p-6">Not authenticated</p>;
 
   // Fetch servers
-  const { data: servers } = await supabaseServer
+  const { data: servers } = await supabase
     .from("servers")
     .select("*")
     .eq("user_id", user.id);
 
   // Fetch alerts (latest 10)
-  const { data: alerts } = await supabaseServer
+  const { data: alerts } = await supabase
     .from("alerts")
     .select("*")
     .eq("user_id", user.id)
@@ -28,7 +28,7 @@ export default async function DashboardPage() {
   // Fetch latest metrics for all servers
   const serverMetrics = await Promise.all(
     (servers ?? []).map(async (srv) => {
-      const { data: metric } = await supabaseServer
+      const { data: metric } = await supabase
         .from("metrics")
         .select("*")
         .eq("server_id", srv.id)
