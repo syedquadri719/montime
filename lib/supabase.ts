@@ -1,17 +1,19 @@
 // lib/supabase.ts
 import { createClient } from "@supabase/supabase-js";
 
-// -------------------------------
-// CLIENT-SIDE SUPABASE
-// -------------------------------
-export const supabaseClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// ---------------------------------------------------------
+// CLIENT (Runs in browser)
+// ---------------------------------------------------------
+export function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
 
-// -------------------------------
-// SERVER-SIDE (ADMIN) SUPABASE
-// -------------------------------
+// ---------------------------------------------------------
+// SERVER / ADMIN (Runs on server only)
+// ---------------------------------------------------------
 export function getSupabaseAdmin() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
