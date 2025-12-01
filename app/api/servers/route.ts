@@ -63,7 +63,6 @@ export async function POST(request: NextRequest) {
     }
 
     const supabaseAdmin = getSupabaseAdmin();
-    // @ts-expect-error - Supabase types issue
     const { data: server, error } = await supabaseAdmin.from('servers').insert({ user_id: user.id, name, hostname: name, status: 'offline' }).select('id, name, api_key, status, created_at').single();
 
     if (error) {
