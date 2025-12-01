@@ -12,13 +12,13 @@ export default async function DashboardPage() {
   if (!user) return <p className="p-6">Not authenticated</p>;
 
   // Fetch servers
-  const { data: servers } = await supabase
+  const { data: servers } = await supabaseServer
     .from("servers")
     .select("*")
     .eq("user_id", user.id);
 
   // Fetch alerts (latest 10)
-  const { data: alerts } = await supabase
+  const { data: alerts } = await supabaseServer
     .from("alerts")
     .select("*")
     .eq("user_id", user.id)
@@ -28,7 +28,7 @@ export default async function DashboardPage() {
   // Fetch latest metrics for all servers
   const serverMetrics = await Promise.all(
     (servers ?? []).map(async (srv) => {
-      const { data: metric } = await supabase
+      const { data: metric } = await supabaseServer
         .from("metrics")
         .select("*")
         .eq("server_id", srv.id)
