@@ -2,7 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { ServerCard } from "@/components/server-card";
 import { AlertBadge } from "@/components/alert-badge";
 import Link from "next/link";
-import { supabaseServer } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -11,24 +11,24 @@ export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) return <p className="p-6">Not authenticated</p>;
 
-  // Fetch servers
-  const { data: servers } = await supabaseServer
+  // Fetch servers owned by this user
+  const { data: servers } = await supabaseAdmin
     .from("servers")
     .select("*")
     .eq("user_id", user.id);
 
   // Fetch alerts (latest 10)
-  const { data: alerts } = await supabaseServer
+  const { data: alerts } = await supabaseAdmin
     .from("alerts")
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(10);
 
-  // Fetch latest metrics for all servers
+  // Fetch last metric for each server
   const serverMetrics = await Promise.all(
     (servers ?? []).map(async (srv) => {
-      const { data: metric } = await supabaseServer
+      const { data: metric } = await supabaseAdmin
         .from("metrics")
         .select("*")
         .eq("server_id", srv.id)
