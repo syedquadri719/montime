@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { signUp } from '@/lib/auth';
-import { useRouter } from 'next/navigation';
+import { signupAction } from '@/app/actions/auth';
 import Link from 'next/link';
 
 export default function SignupPage() {
-  const router = useRouter();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,11 +17,13 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      await signUp(email, password, fullName);
-      router.push('/dashboard');
+      const result = await signupAction(email, password, fullName);
+      if (result?.error) {
+        setError(result.error);
+        setLoading(false);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to create account. Please try again.');
-    } finally {
       setLoading(false);
     }
   };

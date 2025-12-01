@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { signIn } from '@/lib/auth';
-import { useRouter } from 'next/navigation';
+import { loginAction } from '@/app/actions/auth';
 import Link from 'next/link';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -18,11 +16,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await signIn(email, password);
-      router.push('/dashboard');
+      const result = await loginAction(email, password);
+      if (result?.error) {
+        setError(result.error);
+        setLoading(false);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to sign in. Please check your credentials.');
-    } finally {
       setLoading(false);
     }
   };

@@ -21,24 +21,28 @@ export const supabaseAdmin = createClient(
 export async function createServerClient() {
   const cookieStore = await cookies();
 
-  return createClient(
+  const accessToken = cookieStore.get('sb-access-token')?.value;
+  const refreshToken = cookieStore.get('sb-refresh-token')?.value;
+
+  const client = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: false,
-        storage: {
-          getItem: (key: string) => {
-            return cookieStore.get(key)?.value ?? null;
-          },
-          setItem: () => {},
-          removeItem: () => {},
-        },
+        persistSession: false,
       },
     }
   );
+
+  // If we have tokens, set the session manually
+  if (accessToken && refreshToken) {
+    await client.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+  }
+
+  return client;
 }
 
 /**
