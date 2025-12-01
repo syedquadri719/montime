@@ -1,5 +1,4 @@
-// lib/auth.ts
-import { NextRequest } from "next/server";
+// lib/auth.ts (CLIENT-SIDE ONLY)
 import { supabase } from "./supabase-client";
 
 /* ---------- SIGNUP ---------- */
@@ -33,27 +32,6 @@ export async function signOut() {
   if (error) throw error;
 }
 
-/* ---------- CURRENT USER (client + server) ---------- */
-export async function getCurrentUser(request?: NextRequest) {
-  if (request) {
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader) return null;
-
-    const token = authHeader.replace("Bearer ", "");
-
-    const { supabaseAdmin } = await import("./supabase-server");
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-    if (error || !user) return null;
-
-    return user;
-  }
-
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error) throw error;
-
-  return user;
-}
-
 /* ---------- SESSION ---------- */
 export async function getSession() {
   const { data: { session }, error } = await supabase.auth.getSession();
@@ -61,14 +39,9 @@ export async function getSession() {
   return session;
 }
 
-/* ---------- USER PROFILE ---------- */
-export async function getUserProfile(userId: string) {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", userId)
-    .maybeSingle();
-
+/* ---------- CURRENT USER (CLIENT) ---------- */
+export async function getCurrentUser() {
+  const { data: { user }, error } = await supabase.auth.getUser();
   if (error) throw error;
-  return data;
+  return user;
 }

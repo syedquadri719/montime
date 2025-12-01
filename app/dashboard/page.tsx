@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUserServer } from "@/lib/auth-server";
 import { ServerCard } from "@/components/server-card";
 import { AlertBadge } from "@/components/alert-badge";
 import Link from "next/link";
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
 export default async function DashboardPage() {
-  const user = await getCurrentUser();
+  const user = await getCurrentUserServer();
   if (!user) return <p className="p-6">Not authenticated</p>;
 
   // Fetch servers owned by this user
