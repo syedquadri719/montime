@@ -2,15 +2,20 @@
 import { NextRequest } from "next/server";
 import { supabaseAdmin, createServerClient } from "./supabase-server";
 
-/* ---------- CURRENT USER (API routes with Bearer token) ---------- */
+/* ---------- CURRENT USER (API routes with Bearer token OR cookies) ---------- */
 export async function getCurrentUser(request: NextRequest) {
+  // First, try Bearer token authentication (for external agents)
   const authHeader = request.headers.get("authorization");
-  if (!authHeader) return null;
+  if (authHeader) {
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    if (!error && user) return user;
+  }
 
-  const token = authHeader.replace("Bearer ", "");
-
-  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !user) return null;
+  // Fallback to cookie-based authentication (for browser API calls)
+  const supabaseServer = await createServerClient();
+  const { data: { user }, error } = await supabaseServer.auth.getUser();
+  if (error) return null;
 
   return user;
 }
