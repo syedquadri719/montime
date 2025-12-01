@@ -1,7 +1,6 @@
 // lib/auth.ts
 import { NextRequest } from "next/server";
 import { supabase } from "./supabase-client";
-import { supabaseAdmin } from "./supabase-server";
 
 /* ---------- SIGNUP ---------- */
 export async function signUp(email: string, password: string, fullName?: string) {
@@ -42,6 +41,7 @@ export async function getCurrentUser(request?: NextRequest) {
 
     const token = authHeader.replace("Bearer ", "");
 
+    const { supabaseAdmin } = await import("./supabase-server");
     const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
     if (error || !user) return null;
 
