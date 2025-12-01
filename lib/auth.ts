@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
-import { supabase, supabaseServer } from "./supabase";
+import { supabase } from "./supabase";         // browser client
+import { supabaseAdmin } from "./supabase";    // backend service client
 
 // -------- SIGN UP --------
 export async function signUp(email: string, password: string, fullName?: string) {
@@ -15,7 +16,7 @@ export async function signUp(email: string, password: string, fullName?: string)
   return data;
 }
 
-// -------- SIGN IN --------
+// -------- LOGIN --------
 export async function signIn(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -26,44 +27,49 @@ export async function signIn(email: string, password: string) {
   return data;
 }
 
-// -------- SIGN OUT --------
+// -------- LOGOUT --------
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 }
 
-// -------- CURRENT USER --------
+// -------- GET CURRENT USER --------
 export async function getCurrentUser(request?: NextRequest) {
-  // Server request: use service client
   if (request) {
     const authHeader = request.headers.get("authorization");
     if (!authHeader) return null;
 
     const token = authHeader.replace("Bearer ", "");
 
-    const { data, error } = await supabaseServer.auth.getUser(token);
-    if (error) return null;
+    const { data, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !data.user) return null;
 
     return data.user;
   }
 
-  // Client request
-  const { data, error } = await supabase.auth.getUser();
-  if (error) return null;
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
-  return data.user;
+  if (error) throw error;
+  return user;
 }
 
 // -------- SESSION --------
 export async function getSession() {
-  const { data, error } = await supabase.auth.getSession();
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
   if (error) throw error;
-  return data.session;
+  return session;
 }
 
 // -------- USER PROFILE --------
 export async function getUserProfile(userId: string) {
-  const { data, error } = await supabaseServer
+  const { data, error } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", userId)
