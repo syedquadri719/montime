@@ -66,7 +66,7 @@ export default async function DashboardPage() {
                 key={alert.id}
                 className="flex items-center justify-between p-3 border rounded-lg"
               >
-                <AlertBadge type={alert.severity} />
+                <AlertBadge alert={alert} />
                 <p className="text-sm text-slate-600 flex-1 ml-3">
                   {alert.message}
                 </p>
