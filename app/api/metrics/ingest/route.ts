@@ -46,7 +46,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to store metrics' }, { status: 500 });
     }
 
-    // @ts-expect-error - Supabase types issue
     await supabaseAdmin.from('servers').update({ status, last_seen_at: new Date().toISOString() }).eq('id', server.id);
 
     if (status === 'critical') {
@@ -61,7 +60,6 @@ export async function POST(request: NextRequest) {
         currentValue = disk;
       }
 
-      // @ts-expect-error - Supabase types issue
       await supabaseAdmin.from('alerts').insert({ server_id: server.id, user_id: server.user_id, type: alertType, message: `${alertType.toUpperCase()} usage is critically high at ${currentValue.toFixed(1)}%`, severity: 'critical' });
     }
 
