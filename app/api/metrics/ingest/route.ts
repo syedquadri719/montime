@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
       status = 'warning';
     }
 
-    // @ts-expect-error - Supabase types issue
     const { error: metricsError } = await supabaseAdmin.from('metrics').insert({ server_id: server.id, cpu: parseFloat(cpu), memory: parseFloat(memory), disk: parseFloat(disk), status });
 
     if (metricsError) {
