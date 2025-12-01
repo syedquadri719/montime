@@ -2,7 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { ServerCard } from "@/components/server-card";
 import { AlertBadge } from "@/components/alert-badge";
 import Link from "next/link";
-import { getSupabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase-server";
 const supabaseAdmin = getSupabaseAdmin();
 
 export const dynamic = "force-dynamic";
