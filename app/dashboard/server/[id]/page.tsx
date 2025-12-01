@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-import { supabaseServer } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 import { MetricChart } from "@/components/metric-chart";
 import { AlertBadge } from "@/components/alert-badge";
 import Link from "next/link";
@@ -9,7 +9,7 @@ import Link from "next/link";
 export default async function ServerDetailPage({ params }: { params: { id: string } }) {
   const { id } = params;
 
-  const supabase = supabaseServer;
+  const supabase = getSupabaseAdmin();
 
   const { data: serverData } = await supabase
     .from("servers")
