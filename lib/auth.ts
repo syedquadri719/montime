@@ -1,8 +1,9 @@
+// lib/auth.ts
 import { NextRequest } from "next/server";
-import { supabase } from "./supabase";         // browser client
-import { supabaseAdmin } from "./supabase";    // backend service client
+import { supabase } from "./supabase-client";
+import { supabaseAdmin } from "./supabase-server";
 
-// -------- SIGN UP --------
+/* ---------- SIGNUP ---------- */
 export async function signUp(email: string, password: string, fullName?: string) {
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -16,7 +17,7 @@ export async function signUp(email: string, password: string, fullName?: string)
   return data;
 }
 
-// -------- LOGIN --------
+/* ---------- LOGIN ---------- */
 export async function signIn(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -27,13 +28,13 @@ export async function signIn(email: string, password: string) {
   return data;
 }
 
-// -------- LOGOUT --------
+/* ---------- LOGOUT ---------- */
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 }
 
-// -------- GET CURRENT USER --------
+/* ---------- CURRENT USER (client + server) ---------- */
 export async function getCurrentUser(request?: NextRequest) {
   if (request) {
     const authHeader = request.headers.get("authorization");
@@ -41,33 +42,26 @@ export async function getCurrentUser(request?: NextRequest) {
 
     const token = authHeader.replace("Bearer ", "");
 
-    const { data, error } = await supabaseAdmin.auth.getUser(token);
-    if (error || !data.user) return null;
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !user) return null;
 
-    return data.user;
+    return user;
   }
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
+  const { data: { user }, error } = await supabase.auth.getUser();
   if (error) throw error;
+
   return user;
 }
 
-// -------- SESSION --------
+/* ---------- SESSION ---------- */
 export async function getSession() {
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession();
-
+  const { data: { session }, error } = await supabase.auth.getSession();
   if (error) throw error;
   return session;
 }
 
-// -------- USER PROFILE --------
+/* ---------- USER PROFILE ---------- */
 export async function getUserProfile(userId: string) {
   const { data, error } = await supabase
     .from("profiles")
