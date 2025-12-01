@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-import { getSupabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { MetricChart } from "@/components/metric-chart";
 import { AlertBadge } from "@/components/alert-badge";
 import Link from "next/link";
