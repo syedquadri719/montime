@@ -10,12 +10,16 @@ let _supabaseAdmin: SupabaseClient | null = null;
  * Creates client lazily to ensure env vars are available
  */
 export function getSupabaseAdmin() {
-  if (_supabaseAdmin) {
-    return _supabaseAdmin;
-  }
-
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+
+  console.log('getSupabaseAdmin - Environment check:', {
+    hasUrl: !!supabaseUrl,
+    hasServiceKey: !!supabaseServiceKey,
+    urlValue: supabaseUrl,
+    keyPrefix: supabaseServiceKey?.substring(0, 30),
+    keyLength: supabaseServiceKey?.length
+  });
 
   if (!supabaseUrl || !supabaseServiceKey) {
     console.error('Missing Supabase environment variables:', {
@@ -28,13 +32,22 @@ export function getSupabaseAdmin() {
     throw new Error('Missing required Supabase environment variables');
   }
 
+  if (_supabaseAdmin) {
+    return _supabaseAdmin;
+  }
+
   _supabaseAdmin = createClient(
     supabaseUrl,
     supabaseServiceKey,
     {
-      auth: { persistSession: false },
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
     }
   );
+
+  console.log('getSupabaseAdmin - Client created successfully');
 
   return _supabaseAdmin;
 }
