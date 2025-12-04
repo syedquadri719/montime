@@ -2,12 +2,10 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
-let _supabaseAdmin: SupabaseClient | null = null;
-
 /**
  * Get SERVER-SIDE Supabase client (admin)
  * Uses SERVICE ROLE KEY — DO NOT expose to browser
- * Creates client lazily to ensure env vars are available
+ * Creates a fresh client on each call (no caching in serverless)
  */
 export function getSupabaseAdmin() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -32,11 +30,8 @@ export function getSupabaseAdmin() {
     throw new Error('Missing required Supabase environment variables');
   }
 
-  if (_supabaseAdmin) {
-    return _supabaseAdmin;
-  }
-
-  _supabaseAdmin = createClient(
+  // Create a fresh client each time - no caching in serverless
+  const client = createClient(
     supabaseUrl,
     supabaseServiceKey,
     {
@@ -47,20 +42,10 @@ export function getSupabaseAdmin() {
     }
   );
 
-  console.log('getSupabaseAdmin - Client created successfully');
+  console.log('Supabase admin client created with URL:', supabaseUrl.substring(0, 30));
 
-  return _supabaseAdmin;
+  return client;
 }
-
-/**
- * Backwards compatibility - use getSupabaseAdmin() instead
- * @deprecated Use getSupabaseAdmin() function to ensure lazy initialization
- */
-export const supabaseAdmin = new Proxy({} as SupabaseClient, {
-  get(target, prop) {
-    return getSupabaseAdmin()[prop as keyof SupabaseClient];
-  }
-});
 
 /**
  * SERVER-SIDE Supabase client (with user session from cookies)
@@ -68,18 +53,24 @@ export const supabaseAdmin = new Proxy({} as SupabaseClient, {
  */
 export async function createServerClient() {
   const cookieStore = await cookies();
-
   const accessToken = cookieStore.get('sb-access-token')?.value;
   const refreshToken = cookieStore.get('sb-refresh-token')?.value;
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   console.log('createServerClient - Has tokens:', {
     hasAccessToken: !!accessToken,
     hasRefreshToken: !!refreshToken
   });
 
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing Supabase URL or anon key');
+  }
+
   const client = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       auth: {
         persistSession: false,
