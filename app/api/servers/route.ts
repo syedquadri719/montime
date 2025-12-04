@@ -52,8 +52,11 @@ export async function POST(request: NextRequest) {
     const user = await getCurrentUser(request);
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      console.error('POST /api/servers - No user found in session');
+      return NextResponse.json({ error: 'Unauthorized - Please log in again' }, { status: 401 });
     }
+
+    console.log('POST /api/servers - User authenticated:', user.id);
 
     const body = await request.json();
     const { name } = body;
@@ -62,13 +65,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Server name is required' }, { status: 400 });
     }
 
+    console.log('POST /api/servers - Creating server with name:', name);
+
     const supabaseAdmin = getSupabaseAdmin();
-    const { data: server, error } = await supabaseAdmin.from('servers').insert({ user_id: user.id, name, hostname: name, status: 'offline' }).select('id, name, api_key, status, created_at').single();
+    const { data: server, error } = await supabaseAdmin
+      .from('servers')
+      .insert({
+        user_id: user.id,
+        name,
+        hostname: name,
+        status: 'offline'
+      })
+      .select('id, name, api_key, status, created_at')
+      .single();
 
     if (error) {
-      console.error('Error creating server:', error);
-      return NextResponse.json({ error: 'Failed to create server' }, { status: 500 });
+      console.error('Error creating server in database:', error);
+      return NextResponse.json({
+        error: `Failed to create server: ${error.message}`
+      }, { status: 500 });
     }
+
+    console.log('POST /api/servers - Server created successfully:', server.id);
 
     return NextResponse.json({
       server: {
@@ -78,6 +96,8 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
   } catch (error) {
     console.error('Error in POST /api/servers:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({
+      error: `Internal server error: ${error instanceof Error ? error.message : 'Unknown error'}`
+    }, { status: 500 });
   }
 }

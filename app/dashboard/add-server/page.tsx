@@ -27,11 +27,16 @@ export default function AddServerPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to add server');
+        console.error('Server creation failed:', data);
+        setError(data.error || 'Failed to add server');
+        setLoading(false);
+        return;
       }
 
       setServerToken(data.server.api_key);
+      setLoading(false);
     } catch (err: any) {
+      console.error('Error adding server:', err);
       setError(err.message || 'Failed to add server');
       setLoading(false);
     }
