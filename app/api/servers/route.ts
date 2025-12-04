@@ -72,6 +72,22 @@ export async function POST(request: NextRequest) {
     // Log the Supabase client status
     console.log('POST /api/servers - Supabase admin client initialized');
 
+    // Test a simple query first to verify the connection
+    const { data: testData, error: testError } = await supabaseAdmin
+      .from('servers')
+      .select('id')
+      .limit(1);
+
+    console.log('POST /api/servers - Test query result:', {
+      hasData: !!testData,
+      hasError: !!testError,
+      error: testError
+    });
+
+    if (testError) {
+      console.error('POST /api/servers - Connection test failed:', testError);
+    }
+
     const { data: server, error } = await supabaseAdmin
       .from('servers')
       .insert({
@@ -88,7 +104,8 @@ export async function POST(request: NextRequest) {
         message: error.message,
         details: error.details,
         hint: error.hint,
-        code: error.code
+        code: error.code,
+        fullError: JSON.stringify(error, null, 2)
       });
       return NextResponse.json({
         error: `Failed to create server: ${error.message}`,
