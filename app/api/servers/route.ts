@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
       console.error('POST /api/servers - Connection test failed:', testError);
     }
 
-    const { data: server, error } = await supabaseAdmin
+    const { data: insertedServer, error: insertError } = await supabaseAdmin
       .from('servers')
       .insert({
         user_id: user.id,
@@ -96,21 +96,35 @@ export async function POST(request: NextRequest) {
         hostname: name,
         status: 'offline'
       })
+      .select('id')
+      .single();
+
+    if (insertError) {
+      console.error('Error creating server in database:', {
+        message: insertError.message,
+        details: insertError.details,
+        hint: insertError.hint,
+        code: insertError.code,
+        fullError: JSON.stringify(insertError, null, 2)
+      });
+      return NextResponse.json({
+        error: `Failed to create server: ${insertError.message}`,
+        details: insertError.details,
+        code: insertError.code
+      }, { status: 500 });
+    }
+
+    // Fetch the full server data in a separate query
+    const { data: server, error } = await supabaseAdmin
+      .from('servers')
       .select('id, name, api_key, status, created_at')
+      .eq('id', insertedServer.id)
       .single();
 
     if (error) {
-      console.error('Error creating server in database:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
-        fullError: JSON.stringify(error, null, 2)
-      });
+      console.error('Error fetching created server:', error);
       return NextResponse.json({
-        error: `Failed to create server: ${error.message}`,
-        details: error.details,
-        code: error.code
+        error: `Server created but failed to fetch details: ${error.message}`
       }, { status: 500 });
     }
 
