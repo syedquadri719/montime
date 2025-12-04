@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { loginAction } from '@/app/actions/auth';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,11 +17,22 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const result = await loginAction(email, password);
-      if (result?.error) {
-        setError(result.error);
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to sign in');
         setLoading(false);
+        return;
       }
+
+      router.push('/dashboard');
+      router.refresh();
     } catch (err: any) {
       setError(err.message || 'Failed to sign in. Please check your credentials.');
       setLoading(false);

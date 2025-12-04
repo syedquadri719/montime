@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { signupAction } from '@/app/actions/auth';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function SignupPage() {
+  const router = useRouter();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,11 +18,22 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const result = await signupAction(email, password, fullName);
-      if (result?.error) {
-        setError(result.error);
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, fullName }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to create account');
         setLoading(false);
+        return;
       }
+
+      router.push('/dashboard');
+      router.refresh();
     } catch (err: any) {
       setError(err.message || 'Failed to create account. Please try again.');
       setLoading(false);
