@@ -1,18 +1,53 @@
 // lib/supabase-server.ts
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
+let _supabaseAdmin: SupabaseClient | null = null;
+
 /**
- * SERVER-SIDE Supabase client (admin)
+ * Get SERVER-SIDE Supabase client (admin)
  * Uses SERVICE ROLE KEY — DO NOT expose to browser
+ * Creates client lazily to ensure env vars are available
  */
-export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!,
-  {
-    auth: { persistSession: false },
+export function getSupabaseAdmin() {
+  if (_supabaseAdmin) {
+    return _supabaseAdmin;
   }
-);
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('Missing Supabase environment variables:', {
+      hasUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey,
+      urlPrefix: supabaseUrl?.substring(0, 20),
+      keyPrefix: supabaseServiceKey?.substring(0, 20),
+      allEnvKeys: Object.keys(process.env).filter(k => k.includes('SUPABASE'))
+    });
+    throw new Error('Missing required Supabase environment variables');
+  }
+
+  _supabaseAdmin = createClient(
+    supabaseUrl,
+    supabaseServiceKey,
+    {
+      auth: { persistSession: false },
+    }
+  );
+
+  return _supabaseAdmin;
+}
+
+/**
+ * Backwards compatibility - use getSupabaseAdmin() instead
+ * @deprecated Use getSupabaseAdmin() function to ensure lazy initialization
+ */
+export const supabaseAdmin = new Proxy({} as SupabaseClient, {
+  get(target, prop) {
+    return getSupabaseAdmin()[prop as keyof SupabaseClient];
+  }
+});
 
 /**
  * SERVER-SIDE Supabase client (with user session from cookies)
@@ -43,12 +78,4 @@ export async function createServerClient() {
   }
 
   return client;
-}
-
-/**
- * Backwards compatibility:
- * Some files still import getSupabaseAdmin()
- */
-export function getSupabaseAdmin() {
-  return supabaseAdmin;
 }

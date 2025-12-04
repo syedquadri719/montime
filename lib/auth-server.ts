@@ -1,6 +1,6 @@
 // lib/auth-server.ts
 import { NextRequest } from "next/server";
-import { supabaseAdmin, createServerClient } from "./supabase-server";
+import { getSupabaseAdmin, createServerClient } from "./supabase-server";
 
 /* ---------- CURRENT USER (API routes with Bearer token OR cookies) ---------- */
 export async function getCurrentUser(request: NextRequest) {
@@ -8,6 +8,7 @@ export async function getCurrentUser(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   if (authHeader) {
     const token = authHeader.replace("Bearer ", "");
+    const supabaseAdmin = getSupabaseAdmin();
     const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
     if (!error && user) return user;
   }
@@ -32,6 +33,7 @@ export async function getCurrentUserServer() {
 
 /* ---------- USER PROFILE (Server) ---------- */
 export async function getUserProfile(userId: string) {
+  const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from("profiles")
     .select("*")
