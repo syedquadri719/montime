@@ -59,6 +59,11 @@ export async function createServerClient() {
   const accessToken = cookieStore.get('sb-access-token')?.value;
   const refreshToken = cookieStore.get('sb-refresh-token')?.value;
 
+  console.log('createServerClient - Has tokens:', {
+    hasAccessToken: !!accessToken,
+    hasRefreshToken: !!refreshToken
+  });
+
   const client = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -71,10 +76,16 @@ export async function createServerClient() {
 
   // If we have tokens, set the session manually
   if (accessToken && refreshToken) {
-    await client.auth.setSession({
+    const { data, error } = await client.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken,
     });
+
+    if (error) {
+      console.log('createServerClient - Error setting session:', error.message);
+    } else {
+      console.log('createServerClient - Session set successfully');
+    }
   }
 
   return client;

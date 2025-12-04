@@ -68,6 +68,10 @@ export async function POST(request: NextRequest) {
     console.log('POST /api/servers - Creating server with name:', name);
 
     const supabaseAdmin = getSupabaseAdmin();
+
+    // Log the Supabase client status
+    console.log('POST /api/servers - Supabase admin client initialized');
+
     const { data: server, error } = await supabaseAdmin
       .from('servers')
       .insert({
@@ -80,9 +84,16 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating server in database:', error);
+      console.error('Error creating server in database:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return NextResponse.json({
-        error: `Failed to create server: ${error.message}`
+        error: `Failed to create server: ${error.message}`,
+        details: error.details,
+        code: error.code
       }, { status: 500 });
     }
 
