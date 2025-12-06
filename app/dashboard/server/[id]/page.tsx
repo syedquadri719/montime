@@ -27,7 +27,7 @@ export default async function ServerDetailPage({ params }: { params: { id: strin
     last_seen_at: string | null;
     created_at: string;
     user_id: string;
-    api_key: string;
+    token: string;
   };
 
   const { data: metrics } = await supabase

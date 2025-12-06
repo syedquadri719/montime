@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const supabaseAdmin = getSupabaseAdmin();
     const { data: servers, error } = await supabaseAdmin
       .from('servers')
-      .select('id, name, api_key, status, last_seen_at, created_at')
+      .select('id, name, token, status, last_seen_at, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
@@ -34,7 +34,6 @@ export async function GET(request: NextRequest) {
 
         return {
           ...server,
-          token: server.api_key,
           latestMetric
         };
       })
@@ -117,7 +116,7 @@ export async function POST(request: NextRequest) {
     // Fetch the full server data in a separate query
     const { data: server, error } = await supabaseAdmin
       .from('servers')
-      .select('id, name, api_key, status, created_at')
+      .select('id, name, token, status, created_at')
       .eq('id', insertedServer.id)
       .single();
 
@@ -131,10 +130,7 @@ export async function POST(request: NextRequest) {
     console.log('POST /api/servers - Server created successfully:', server.id);
 
     return NextResponse.json({
-      server: {
-        ...(server as any),
-        token: (server as any).api_key
-      }
+      server: server as any
     }, { status: 201 });
   } catch (error) {
     console.error('Error in POST /api/servers:', error);

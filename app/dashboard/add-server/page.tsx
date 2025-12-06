@@ -33,7 +33,7 @@ export default function AddServerPage() {
         return;
       }
 
-      setServerToken(data.server.api_key);
+      setServerToken(data.server.token);
       setLoading(false);
     } catch (err: any) {
       console.error('Error adding server:', err);

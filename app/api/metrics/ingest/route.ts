@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const { data: server, error: serverError } = await supabaseAdmin
       .from('servers')
       .select('id, user_id')
-      .eq('api_key', token)
+      .eq('token', token)
       .maybeSingle();
 
     if (serverError || !server) {
