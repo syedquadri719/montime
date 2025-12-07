@@ -78,7 +78,7 @@ SELECT cron.schedule(
 ```
 
 Replace:
-- `YOUR_PROJECT_REF` with your Supabase project reference (e.g., `zpkximqzejebvhblmysg`)
+- `YOUR_PROJECT_REF` with your Supabase project reference (e.g., `sxyuivpzhsrgjzhznbj`)
 - `YOUR_ANON_KEY` with your anon/public API key
 
 **Alternative: Using Supabase CLI:**
