@@ -39,6 +39,9 @@ export function getSupabaseAdmin() {
         persistSession: false,
         autoRefreshToken: false,
       },
+      db: {
+        schema: 'public',
+      },
     }
   );
 
