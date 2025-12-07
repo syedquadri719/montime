@@ -29,7 +29,7 @@ export default async function ServerDetailPage({ params }: { params: { id: strin
     last_seen_at: string | null;
     created_at: string;
     user_id: string;
-    token: string;
+    api_key: string;
   };
 
   const { data: metrics } = await supabase
@@ -110,7 +110,7 @@ export default async function ServerDetailPage({ params }: { params: { id: strin
               {server.status}
             </div>
           </Badge>
-          <TokenDisplay token={server.token} />
+          <TokenDisplay token={server.api_key} />
         </div>
       </div>
 
