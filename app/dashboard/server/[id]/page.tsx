@@ -4,7 +4,9 @@ export const fetchCache = "force-no-store";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { MetricChart } from "@/components/metric-chart";
 import { AlertBadge } from "@/components/alert-badge";
+import { TokenDisplay } from "@/components/token-display";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 
 export default async function ServerDetailPage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -64,13 +66,53 @@ export default async function ServerDetailPage({ params }: { params: { id: strin
     created_at: string;
   }>;
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'online':
+        return 'bg-green-500';
+      case 'warning':
+        return 'bg-yellow-500';
+      case 'critical':
+        return 'bg-red-500';
+      default:
+        return 'bg-slate-400';
+    }
+  };
+
+  const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+    switch (status) {
+      case 'online':
+        return 'default';
+      case 'warning':
+        return 'secondary';
+      case 'critical':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
+
   return (
     <div className="p-6 space-y-8">
-      <Link href="/dashboard" className="text-blue-400 hover:underline">
+      <Link href="/dashboard" className="text-blue-600 hover:underline inline-block">
         ← Back to Dashboard
       </Link>
 
-      <h1 className="text-3xl font-bold text-white">{server.name}</h1>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">{server.name}</h1>
+          <p className="text-slate-600 mt-1">{server.hostname}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Badge variant={getStatusVariant(server.status)}>
+            <div className="flex items-center gap-1.5">
+              <div className={`h-2 w-2 rounded-full ${getStatusColor(server.status)}`} />
+              {server.status}
+            </div>
+          </Badge>
+          <TokenDisplay token={server.token} />
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <MetricChart title="CPU Usage" data={metricList} metric="cpu" color="#4F46E5" />
@@ -78,13 +120,16 @@ export default async function ServerDetailPage({ params }: { params: { id: strin
         <MetricChart title="Disk Usage" data={metricList} metric="disk" color="#D97706" />
       </div>
 
-      {/* Alerts */}
       <div>
-        <h2 className="text-2xl font-semibold text-zinc-300 mb-4">Recent Alerts</h2>
+        <h2 className="text-2xl font-semibold mb-4">Recent Alerts</h2>
         <div className="space-y-3">
-          {alertList.map((alert) => (
-            <AlertBadge key={alert.id} alert={alert} />
-          ))}
+          {alertList.length > 0 ? (
+            alertList.map((alert) => (
+              <AlertBadge key={alert.id} alert={alert} />
+            ))
+          ) : (
+            <p className="text-slate-500 text-sm">No alerts for this server</p>
+          )}
         </div>
       </div>
     </div>
