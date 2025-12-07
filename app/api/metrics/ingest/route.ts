@@ -23,7 +23,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { cpu, memory, disk } = body;
+    const {
+      cpu,
+      memory,
+      disk,
+      network_in,
+      network_out,
+      load_average,
+      uptime,
+      processes
+    } = body;
 
     if (cpu === undefined || memory === undefined || disk === undefined) {
       return NextResponse.json(
@@ -39,7 +48,21 @@ export async function POST(request: NextRequest) {
       status = 'warning';
     }
 
-    const { error: metricsError } = await supabaseAdmin.from('metrics').insert({ server_id: server.id, cpu: parseFloat(cpu), memory: parseFloat(memory), disk: parseFloat(disk), status });
+    const metricsData: any = {
+      server_id: server.id,
+      cpu: parseFloat(cpu),
+      memory: parseFloat(memory),
+      disk: parseFloat(disk),
+      status
+    };
+
+    if (network_in !== undefined) metricsData.network_in = parseInt(network_in);
+    if (network_out !== undefined) metricsData.network_out = parseInt(network_out);
+    if (load_average !== undefined) metricsData.load_average = parseFloat(load_average);
+    if (uptime !== undefined) metricsData.uptime = parseInt(uptime);
+    if (processes !== undefined) metricsData.processes = parseInt(processes);
+
+    const { error: metricsError } = await supabaseAdmin.from('metrics').insert(metricsData);
 
     if (metricsError) {
       console.error('Error inserting metrics:', metricsError);
