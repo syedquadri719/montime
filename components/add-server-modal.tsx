@@ -18,7 +18,7 @@ interface AddServerModalProps {
 interface CreatedServer {
   id: string;
   name: string;
-  token: string;
+  api_key: string;
 }
 
 export function AddServerModal({ open, onOpenChange, onServerCreated }: AddServerModalProps) {
@@ -64,7 +64,7 @@ export function AddServerModal({ open, onOpenChange, onServerCreated }: AddServe
 
   const copyToken = () => {
     if (createdServer) {
-      navigator.clipboard.writeText(createdServer.token);
+      navigator.clipboard.writeText(createdServer.api_key);
       setCopiedToken(true);
       setTimeout(() => setCopiedToken(false), 2000);
     }
@@ -77,7 +77,7 @@ wget https://raw.githubusercontent.com/yourusername/montime/main/agents/agent.sh
 chmod +x agent.sh
 
 # Set your server token
-export SERVER_TOKEN="${createdServer.token}"
+export SERVER_TOKEN="${createdServer.api_key}"
 
 # Run the agent
 ./agent.sh
@@ -89,7 +89,7 @@ sudo wget https://raw.githubusercontent.com/yourusername/montime/main/agents/sys
 
 # Edit the service file to add your token
 sudo nano /etc/systemd/system/montime-agent.service
-# Replace YOUR_SERVER_TOKEN_HERE with: ${createdServer.token}
+# Replace YOUR_SERVER_TOKEN_HERE with: ${createdServer.api_key}
 
 sudo systemctl daemon-reload
 sudo systemctl enable montime-agent
@@ -103,7 +103,7 @@ wget https://raw.githubusercontent.com/yourusername/montime/main/agents/agent.py
 chmod +x agent.py
 
 # Set your server token
-export SERVER_TOKEN="${createdServer.token}"
+export SERVER_TOKEN="${createdServer.api_key}"
 
 # Run the agent (will auto-install dependencies)
 python3 agent.py
@@ -116,7 +116,7 @@ sudo wget https://raw.githubusercontent.com/yourusername/montime/main/agents/sys
 
 # Edit the service file to add your token
 sudo nano /etc/systemd/system/montime-agent.service
-# Replace YOUR_SERVER_TOKEN_HERE with: ${createdServer.token}
+# Replace YOUR_SERVER_TOKEN_HERE with: ${createdServer.api_key}
 
 sudo systemctl daemon-reload
 sudo systemctl enable montime-agent
@@ -184,7 +184,7 @@ sudo systemctl start montime-agent`;
                 <Label className="text-sm font-medium">Server Token</Label>
                 <div className="flex gap-2 mt-2">
                   <Input
-                    value={createdServer.token}
+                    value={createdServer.api_key}
                     readOnly
                     className="font-mono text-sm"
                   />
