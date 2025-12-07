@@ -8,7 +8,7 @@ if [ -z "$SERVER_TOKEN" ]; then
   exit 1
 fi
 
-BASE_URL="${BASE_URL:-https://montime.io}"
+BASE_URL="${BASE_URL:-https://montime-mauve.vercel.app}"
 PING_HOST="8.8.8.8"
 INTERVAL=60
 MAX_RETRIES=3
