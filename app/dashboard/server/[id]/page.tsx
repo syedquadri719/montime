@@ -41,15 +41,15 @@ export default async function ServerDetailPage({ params }: { params: { id: strin
     id: string;
     server_id: string;
     timestamp: string;
-    cpu_usage: number | null;
-    memory_usage: number | null;
-    disk_usage: number | null;
+    cpu: number | null;
+    memory: number | null;
+    disk: number | null;
     created_at: string;
   }>;
 
   const { data: alerts } = await supabase
     .from("alerts")
-    .select("id, server_id, user_id, alert_type, severity, message, created_at")
+    .select("id, server_id, user_id, type, severity, message, created_at")
     .eq("server_id", id)
     .order("created_at", { ascending: false })
     .limit(10);
@@ -58,7 +58,7 @@ export default async function ServerDetailPage({ params }: { params: { id: strin
     id: string;
     server_id: string;
     user_id: string;
-    alert_type: string;
+    type: string;
     severity: string;
     message: string;
     created_at: string;
