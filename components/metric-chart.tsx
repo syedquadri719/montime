@@ -17,7 +17,7 @@ export function MetricChart({ title, data, metric, color = '#3b82f6', unit = '%'
       hour: '2-digit',
       minute: '2-digit'
     }),
-    value: metric === 'cpu' ? item.cpu : metric === 'memory' ? item.memory : item.disk
+    value: metric === 'cpu' ? item.cpu_usage : metric === 'memory' ? item.memory_usage : item.disk_usage
   }));
 
   return (

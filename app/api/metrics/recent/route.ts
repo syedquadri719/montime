@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     const { data: metrics, error } = await supabaseAdmin
       .from('metrics')
-      .select('id, cpu, memory, disk, status, created_at')
+      .select('id, cpu_usage, memory_usage, disk_usage, timestamp, created_at')
       .eq('server_id', serverId)
       .order('created_at', { ascending: false })
       .limit(limit);

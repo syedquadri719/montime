@@ -174,16 +174,16 @@ Deno.serve(async (req: Request) => {
     for (const server of servers || []) {
       const { data: latestMetric } = await supabase
         .from('metrics')
-        .select('cpu, memory, disk, created_at')
+        .select('cpu_usage, memory_usage, disk_usage, created_at')
         .eq('server_id', server.id)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
       const alertCondition = evaluateMetrics(
-        latestMetric?.cpu || null,
-        latestMetric?.memory || null,
-        latestMetric?.disk || null,
+        latestMetric?.cpu_usage || null,
+        latestMetric?.memory_usage || null,
+        latestMetric?.disk_usage || null,
         server.last_seen_at
       );
 

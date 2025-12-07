@@ -90,45 +90,42 @@ export interface Database {
           id: string
           server_id: string
           timestamp: string
-          cpu: number | null
-          memory: number | null
-          disk: number | null
+          cpu_usage: number | null
+          memory_usage: number | null
+          disk_usage: number | null
           network_in: number
           network_out: number
           load_average: number | null
           uptime: number
           processes: number
-          status: string | null
           created_at: string
         }
         Insert: {
           id?: string
           server_id: string
           timestamp?: string
-          cpu?: number | null
-          memory?: number | null
-          disk?: number | null
+          cpu_usage?: number | null
+          memory_usage?: number | null
+          disk_usage?: number | null
           network_in?: number
           network_out?: number
           load_average?: number | null
           uptime?: number
           processes?: number
-          status?: string | null
           created_at?: string
         }
         Update: {
           id?: string
           server_id?: string
           timestamp?: string
-          cpu?: number | null
-          memory?: number | null
-          disk?: number | null
+          cpu_usage?: number | null
+          memory_usage?: number | null
+          disk_usage?: number | null
           network_in?: number
           network_out?: number
           load_average?: number | null
           uptime?: number
           processes?: number
-          status?: string | null
           created_at?: string
         }
       }

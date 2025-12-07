@@ -43,9 +43,9 @@ export default async function ServerDetailPage({ params }: { params: { id: strin
     id: string;
     server_id: string;
     timestamp: string;
-    cpu: number | null;
-    memory: number | null;
-    disk: number | null;
+    cpu_usage: number | null;
+    memory_usage: number | null;
+    disk_usage: number | null;
     created_at: string;
   }>;
 

@@ -13,10 +13,9 @@ interface ServerCardProps {
     status: string;
     last_seen_at: string | null;
     latestMetric?: {
-      cpu: number;
-      memory: number;
-      disk: number;
-      status: string;
+      cpu_usage: number;
+      memory_usage: number;
+      disk_usage: number;
     };
   };
 }
@@ -84,8 +83,8 @@ export function ServerCard({ server }: ServerCardProps) {
                   <Cpu className="h-4 w-4" />
                   <span>CPU</span>
                 </div>
-                <span className={`font-semibold ${getMetricColor(server.latestMetric.cpu, { warning: 70, critical: 85 })}`}>
-                  {server.latestMetric.cpu.toFixed(1)}%
+                <span className={`font-semibold ${getMetricColor(server.latestMetric.cpu_usage, { warning: 70, critical: 85 })}`}>
+                  {server.latestMetric.cpu_usage.toFixed(1)}%
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
@@ -93,8 +92,8 @@ export function ServerCard({ server }: ServerCardProps) {
                   <MemoryStick className="h-4 w-4" />
                   <span>Memory</span>
                 </div>
-                <span className={`font-semibold ${getMetricColor(server.latestMetric.memory, { warning: 70, critical: 80 })}`}>
-                  {server.latestMetric.memory.toFixed(1)}%
+                <span className={`font-semibold ${getMetricColor(server.latestMetric.memory_usage, { warning: 70, critical: 80 })}`}>
+                  {server.latestMetric.memory_usage.toFixed(1)}%
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
@@ -102,8 +101,8 @@ export function ServerCard({ server }: ServerCardProps) {
                   <HardDrive className="h-4 w-4" />
                   <span>Disk</span>
                 </div>
-                <span className={`font-semibold ${getMetricColor(server.latestMetric.disk, { warning: 80, critical: 90 })}`}>
-                  {server.latestMetric.disk.toFixed(1)}%
+                <span className={`font-semibold ${getMetricColor(server.latestMetric.disk_usage, { warning: 80, critical: 90 })}`}>
+                  {server.latestMetric.disk_usage.toFixed(1)}%
                 </span>
               </div>
             </div>
