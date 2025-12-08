@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Activity, Server, Bell, Settings } from 'lucide-react';
+import { Activity, Server, Bell, Settings, Users, LayoutDashboard } from 'lucide-react';
 
 const navItems = [
   {
@@ -15,6 +15,16 @@ const navItems = [
     title: 'Servers',
     href: '/dashboard/servers',
     icon: Server,
+  },
+  {
+    title: 'Groups',
+    href: '/dashboard/groups',
+    icon: Users,
+  },
+  {
+    title: 'Dashboards',
+    href: '/dashboard/dashboards',
+    icon: LayoutDashboard,
   },
   {
     title: 'Alerts',
