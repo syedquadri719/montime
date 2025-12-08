@@ -42,47 +42,53 @@ function evaluateMetrics(
   cpu: number | null,
   memory: number | null,
   disk: number | null,
-  lastSeenAt: string | null
+  lastSeenAt: string | null,
+  settings?: any
 ): AlertCondition | null {
+  const cpuThreshold = settings?.cpu_threshold || 85;
+  const memoryThreshold = settings?.memory_threshold || 80;
+  const diskThreshold = settings?.disk_threshold || 90;
+  const downThreshold = settings?.down_threshold_seconds || 120;
+
   const now = Date.now();
   const lastSeen = lastSeenAt ? new Date(lastSeenAt).getTime() : 0;
   const secondsSinceLastSeen = (now - lastSeen) / 1000;
 
-  if (secondsSinceLastSeen > 120) {
+  if (secondsSinceLastSeen > downThreshold) {
     return {
       type: 'down',
-      message: 'Server is not responding. No metrics received in the last 2 minutes.',
+      message: `Server is not responding. No metrics received in the last ${Math.floor(downThreshold / 60)} minutes.`,
       severity: 'critical'
     };
   }
 
-  if (cpu !== null && cpu > 85) {
+  if (cpu !== null && cpu > cpuThreshold) {
     return {
       type: 'cpu_high',
       message: `CPU usage is critically high at ${cpu.toFixed(1)}%`,
-      severity: 'critical',
+      severity: cpu > 90 ? 'critical' : 'warning',
       currentValue: cpu,
-      threshold: 85
+      threshold: cpuThreshold
     };
   }
 
-  if (memory !== null && memory > 80) {
+  if (memory !== null && memory > memoryThreshold) {
     return {
       type: 'memory_high',
       message: `Memory usage is high at ${memory.toFixed(1)}%`,
-      severity: 'warning',
+      severity: memory > 90 ? 'critical' : 'warning',
       currentValue: memory,
-      threshold: 80
+      threshold: memoryThreshold
     };
   }
 
-  if (disk !== null && disk > 90) {
+  if (disk !== null && disk > diskThreshold) {
     return {
       type: 'disk_high',
       message: `Disk usage is critically high at ${disk.toFixed(1)}%`,
       severity: 'critical',
       currentValue: disk,
-      threshold: 90
+      threshold: diskThreshold
     };
   }
 
@@ -91,7 +97,7 @@ function evaluateMetrics(
 
 async function sendAlertEmail(
   resend: Resend,
-  userEmail: string,
+  recipients: string[],
   serverName: string,
   alertCondition: AlertCondition
 ): Promise<void> {
@@ -123,16 +129,116 @@ async function sendAlertEmail(
     <p style="color: #666; font-size: 12px;">This is an automated alert from Montime.io</p>
   `;
 
+  for (const email of recipients) {
+    try {
+      await resend.emails.send({
+        from: emailSender,
+        to: email,
+        subject: emailSubject,
+        html: emailBody
+      });
+      console.log(`✓ Email sent to ${email} for ${serverName}`);
+    } catch (error) {
+      console.error(`✗ Failed to send email to ${email}:`, error);
+    }
+  }
+}
+
+async function sendSlackNotification(
+  webhookUrl: string,
+  serverName: string,
+  alertCondition: AlertCondition
+): Promise<void> {
+  const color = alertCondition.severity === 'critical' ? 'danger' : 'warning';
+  const emoji = alertCondition.severity === 'critical' ? ':rotating_light:' : ':warning:';
+
+  const payload = {
+    attachments: [
+      {
+        color,
+        title: `${emoji} ${alertCondition.severity.toUpperCase()}: ${serverName}`,
+        text: alertCondition.message,
+        fields: [
+          {
+            title: 'Server',
+            value: serverName,
+            short: true
+          },
+          {
+            title: 'Alert Type',
+            value: alertCondition.type.replace('_', ' ').toUpperCase(),
+            short: true
+          },
+          ...(alertCondition.currentValue ? [{
+            title: 'Current Value',
+            value: `${alertCondition.currentValue.toFixed(1)}%`,
+            short: true
+          }] : []),
+          ...(alertCondition.threshold ? [{
+            title: 'Threshold',
+            value: `${alertCondition.threshold}%`,
+            short: true
+          }] : [])
+        ],
+        footer: 'MonTime Alert',
+        ts: Math.floor(Date.now() / 1000)
+      }
+    ]
+  };
+
   try {
-    await resend.emails.send({
-      from: emailSender,
-      to: userEmail,
-      subject: emailSubject,
-      html: emailBody
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
-    console.log(`✓ Email sent to ${userEmail} for ${serverName}`);
+
+    if (response.ok) {
+      console.log(`✓ Slack notification sent for ${serverName}`);
+    } else {
+      console.error(`✗ Slack notification failed: ${response.statusText}`);
+    }
   } catch (error) {
-    console.error(`✗ Failed to send email to ${userEmail}:`, error);
+    console.error(`✗ Failed to send Slack notification:`, error);
+  }
+}
+
+async function sendWebhookNotification(
+  webhookUrl: string,
+  headers: Record<string, string>,
+  serverName: string,
+  serverId: string,
+  alertCondition: AlertCondition
+): Promise<void> {
+  const payload = {
+    alert_id: `generated-${Date.now()}`,
+    server_id: serverId,
+    server_name: serverName,
+    type: alertCondition.type,
+    severity: alertCondition.severity,
+    message: alertCondition.message,
+    current_value: alertCondition.currentValue,
+    threshold_value: alertCondition.threshold,
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+      console.log(`✓ Webhook notification sent for ${serverName}`);
+    } else {
+      console.error(`✗ Webhook notification failed: ${response.statusText}`);
+    }
+  } catch (error) {
+    console.error(`✗ Failed to send webhook notification:`, error);
   }
 }
 
@@ -169,9 +275,19 @@ Deno.serve(async (req: Request) => {
     }
 
     let alertsCreated = 0;
-    let emailsSent = 0;
+    let notificationsSent = 0;
 
     for (const server of servers || []) {
+      const { data: settings } = await supabase
+        .from('alert_settings')
+        .select('*')
+        .eq('server_id', server.id)
+        .maybeSingle();
+
+      if (settings && !settings.enabled) {
+        continue;
+      }
+
       const { data: latestMetric } = await supabase
         .from('metrics')
         .select('cpu_usage, memory_usage, disk_usage, created_at')
@@ -184,7 +300,8 @@ Deno.serve(async (req: Request) => {
         latestMetric?.cpu_usage || null,
         latestMetric?.memory_usage || null,
         latestMetric?.disk_usage || null,
-        server.last_seen_at
+        server.last_seen_at,
+        settings
       );
 
       if (alertCondition) {
@@ -221,14 +338,30 @@ Deno.serve(async (req: Request) => {
             alertsCreated++;
             console.log(`✓ Alert created: ${alertCondition.type} for ${server.name}`);
 
-            if (resend && server.profiles?.email) {
-              await sendAlertEmail(
-                resend,
-                server.profiles.email,
+            const channels = settings?.notification_channels || ['email'];
+
+            if (channels.includes('email')) {
+              const recipients = settings?.email_recipients || (server.profiles?.email ? [server.profiles.email] : []);
+              if (recipients.length > 0 && resend) {
+                await sendAlertEmail(resend, recipients, server.name, alertCondition);
+                notificationsSent++;
+              }
+            }
+
+            if (channels.includes('slack') && settings?.slack_webhook_url) {
+              await sendSlackNotification(settings.slack_webhook_url, server.name, alertCondition);
+              notificationsSent++;
+            }
+
+            if (channels.includes('webhook') && settings?.webhook_url) {
+              await sendWebhookNotification(
+                settings.webhook_url,
+                settings.webhook_headers || {},
                 server.name,
+                server.id,
                 alertCondition
               );
-              emailsSent++;
+              notificationsSent++;
             }
           } else {
             console.error(`✗ Failed to create alert for ${server.name}:`, insertError);
@@ -241,7 +374,7 @@ Deno.serve(async (req: Request) => {
       success: true,
       serversEvaluated: servers?.length || 0,
       alertsCreated,
-      emailsSent,
+      notificationsSent,
       timestamp: new Date().toISOString()
     };
 

@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { MetricChart } from "@/components/metric-chart";
 import { AlertBadge } from "@/components/alert-badge";
 import { TokenDisplay } from "@/components/token-display";
+import { AlertSettings } from "@/components/alert-settings";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 
@@ -119,6 +120,8 @@ export default async function ServerDetailPage({ params }: { params: { id: strin
         <MetricChart title="Memory Usage" data={metricList} metric="memory" color="#059669" />
         <MetricChart title="Disk Usage" data={metricList} metric="disk" color="#D97706" />
       </div>
+
+      <AlertSettings serverId={id} />
 
       <div>
         <h2 className="text-2xl font-semibold mb-4">Recent Alerts</h2>
