@@ -50,6 +50,7 @@ export default function GroupsPage() {
         if (data.message) {
           toast.info(data.message);
         }
+        fetchAllGroupServers();
       } else {
         toast.error(data.error || 'Failed to fetch groups');
       }
@@ -70,6 +71,26 @@ export default function GroupsPage() {
       }
     } catch (error) {
       console.error('Failed to fetch servers:', error);
+    }
+  };
+
+  const fetchAllGroupServers = async () => {
+    try {
+      const response = await fetch('/api/server-groups');
+      const data = await response.json();
+
+      if (response.ok) {
+        const serversByGroup: Record<string, string[]> = {};
+        (data.data || []).forEach((sg: any) => {
+          if (!serversByGroup[sg.group_id]) {
+            serversByGroup[sg.group_id] = [];
+          }
+          serversByGroup[sg.group_id].push(sg.server_id);
+        });
+        setAssignedServers(serversByGroup);
+      }
+    } catch (error) {
+      console.error('Failed to fetch server groups:', error);
     }
   };
 
@@ -175,6 +196,7 @@ export default function GroupsPage() {
       if (response.ok) {
         toast.success(isAssigned ? 'Server removed from group' : 'Server assigned to group');
         fetchGroupServers(groupId);
+        fetchAllGroupServers();
       } else {
         toast.error(data.error || 'Failed to update assignment');
       }

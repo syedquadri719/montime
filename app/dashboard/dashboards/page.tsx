@@ -30,7 +30,7 @@ export default function DashboardsPage() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: '', description: '', group_id: '' });
+  const [formData, setFormData] = useState({ name: '', description: '', group_id: 'none' });
 
   useEffect(() => {
     fetchDashboards();
@@ -77,7 +77,7 @@ export default function DashboardsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          group_id: formData.group_id || null
+          group_id: formData.group_id === 'none' ? null : formData.group_id
         })
       });
 
@@ -87,7 +87,7 @@ export default function DashboardsPage() {
         toast.success('Dashboard created successfully');
         fetchDashboards();
         setIsCreateOpen(false);
-        setFormData({ name: '', description: '', group_id: '' });
+        setFormData({ name: '', description: '', group_id: 'none' });
       } else {
         toast.error(data.error || 'Failed to create dashboard');
       }
@@ -174,7 +174,7 @@ export default function DashboardsPage() {
                     <SelectValue placeholder="Select a group" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None (Global)</SelectItem>
+                    <SelectItem value="none">None (Global)</SelectItem>
                     {groups.map((group) => (
                       <SelectItem key={group.id} value={group.id}>
                         {group.name}
