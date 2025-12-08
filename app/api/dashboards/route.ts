@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { getCurrentUserServer } from '@/lib/auth-server';
+import { getResourceFilter } from '@/lib/team';
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,14 +11,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const filter = await getResourceFilter(user.id);
     const supabaseAdmin = getSupabaseAdmin();
 
     try {
-      const { data: dashboards, error } = await supabaseAdmin
+      let query = supabaseAdmin
         .from('dashboards')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .select('*');
+
+      if (filter.useTeam && filter.teamId) {
+        query = query.eq('team_id', filter.teamId);
+      } else {
+        query = query.eq('user_id', user.id);
+      }
+
+      const { data: dashboards, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
         if (error.message?.includes('relation "public.dashboards" does not exist')) {
@@ -53,6 +61,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const filter = await getResourceFilter(user.id);
     const body = await request.json();
     const { name, description, group_id, layout } = body;
 
@@ -63,15 +72,21 @@ export async function POST(request: NextRequest) {
     const supabaseAdmin = getSupabaseAdmin();
 
     try {
+      const insertData: any = {
+        user_id: user.id,
+        name,
+        description: description || null,
+        group_id: group_id || null,
+        layout: layout || []
+      };
+
+      if (filter.useTeam && filter.teamId) {
+        insertData.team_id = filter.teamId;
+      }
+
       const { data: dashboard, error } = await supabaseAdmin
         .from('dashboards')
-        .insert({
-          user_id: user.id,
-          name,
-          description: description || null,
-          group_id: group_id || null,
-          layout: layout || []
-        })
+        .insert(insertData)
         .select()
         .single();
 

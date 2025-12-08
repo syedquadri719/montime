@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { getCurrentUser } from '@/lib/auth-server';
+import { getResourceFilter, hasPermission } from '@/lib/team';
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,12 +11,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const filter = await getResourceFilter(user.id);
     const supabaseAdmin = getSupabaseAdmin();
-    const { data: servers, error } = await supabaseAdmin
+
+    let query = supabaseAdmin
       .from('servers')
-      .select('id, name, api_key, status, last_seen_at, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+      .select('id, name, api_key, status, last_seen_at, created_at');
+
+    if (filter.useTeam && filter.teamId) {
+      query = query.eq('team_id', filter.teamId);
+    } else {
+      query = query.eq('user_id', user.id);
+    }
+
+    const { data: servers, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching servers:', error);
@@ -57,6 +66,15 @@ export async function POST(request: NextRequest) {
 
     console.log('POST /api/servers - User authenticated:', user.id);
 
+    const filter = await getResourceFilter(user.id);
+
+    if (!hasPermission(filter.role, 'edit')) {
+      return NextResponse.json(
+        { error: 'You do not have permission to create servers' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { name } = body;
 
@@ -68,10 +86,8 @@ export async function POST(request: NextRequest) {
 
     const supabaseAdmin = getSupabaseAdmin();
 
-    // Log the Supabase client status
     console.log('POST /api/servers - Supabase admin client initialized');
 
-    // Test a simple query first to verify the connection
     const { data: testData, error: testError } = await supabaseAdmin
       .from('servers')
       .select('id')
@@ -87,14 +103,20 @@ export async function POST(request: NextRequest) {
       console.error('POST /api/servers - Connection test failed:', testError);
     }
 
+    const insertData: any = {
+      user_id: user.id,
+      name,
+      hostname: name,
+      status: 'offline'
+    };
+
+    if (filter.useTeam && filter.teamId) {
+      insertData.team_id = filter.teamId;
+    }
+
     const { data: insertedServer, error: insertError } = await supabaseAdmin
       .from('servers')
-      .insert({
-        user_id: user.id,
-        name,
-        hostname: name,
-        status: 'offline'
-      })
+      .insert(insertData)
       .select('id')
       .single();
 
@@ -113,7 +135,6 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // Fetch the full server data in a separate query
     const { data: server, error } = await supabaseAdmin
       .from('servers')
       .select('id, name, api_key, status, created_at')

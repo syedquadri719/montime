@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { getCurrentUserServer } from '@/lib/auth-server';
+import { getResourceFilter } from '@/lib/team';
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,14 +11,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const filter = await getResourceFilter(user.id);
     const supabaseAdmin = getSupabaseAdmin();
 
     try {
-      const { data: groups, error } = await supabaseAdmin
+      let query = supabaseAdmin
         .from('groups')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .select('*');
+
+      if (filter.useTeam && filter.teamId) {
+        query = query.eq('team_id', filter.teamId);
+      } else {
+        query = query.eq('user_id', user.id);
+      }
+
+      const { data: groups, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
         if (error.message?.includes('relation "public.groups" does not exist')) {
@@ -53,6 +61,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const filter = await getResourceFilter(user.id);
     const body = await request.json();
     const { name, description, color } = body;
 
@@ -63,14 +72,20 @@ export async function POST(request: NextRequest) {
     const supabaseAdmin = getSupabaseAdmin();
 
     try {
+      const insertData: any = {
+        user_id: user.id,
+        name,
+        description: description || null,
+        color: color || '#3B82F6'
+      };
+
+      if (filter.useTeam && filter.teamId) {
+        insertData.team_id = filter.teamId;
+      }
+
       const { data: group, error } = await supabaseAdmin
         .from('groups')
-        .insert({
-          user_id: user.id,
-          name,
-          description: description || null,
-          color: color || '#3B82F6'
-        })
+        .insert(insertData)
         .select()
         .single();
 
