@@ -45,6 +45,7 @@ export default function AlertsPage() {
   const [filteredAlerts, setFilteredAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [featureAvailable, setFeatureAvailable] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const [activeTab, setActiveTab] = useState('active');
   const [severityFilter, setSeverityFilter] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -62,18 +63,29 @@ export default function AlertsPage() {
       const response = await fetch('/api/alerts');
       const data = await response.json();
 
-      if (response.status === 503 || data.message?.includes('not yet configured')) {
+      console.log('Alerts API response:', { status: response.status, data });
+
+      if (response.status === 503 || data.message?.includes('not yet configured') || data.message?.includes('needs updating') || data.message?.includes('Unable to access')) {
         setFeatureAvailable(false);
+        setErrorMessage(data.message || data.details || 'Alerts feature not available');
         setLoading(false);
         return;
       }
 
-      if (response.ok) {
-        setAlerts(data.alerts || []);
+      if (!response.ok) {
+        console.error('Alerts API error:', data);
+        setFeatureAvailable(false);
+        setErrorMessage(data.error || data.details || 'Failed to load alerts');
+        setLoading(false);
+        return;
       }
+
+      setFeatureAvailable(true);
+      setAlerts(data.alerts || []);
     } catch (error) {
       console.error('Error fetching alerts:', error);
       setFeatureAvailable(false);
+      setErrorMessage('Network error loading alerts');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -181,10 +193,28 @@ export default function AlertsPage() {
         <AlertUI>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Alerts feature is not yet available. Database tables need to be created manually.
-            Contact your administrator to enable alerts and notifications.
+            <div className="space-y-2">
+              <div>
+                {errorMessage || 'Alerts feature is not yet available. Database tables need to be created manually.'}
+              </div>
+              {errorMessage && (
+                <div className="text-xs text-slate-500 mt-2">
+                  Check the browser console for more details. Common issues:
+                  <ul className="list-disc list-inside mt-1">
+                    <li>Missing columns: Ensure alerts table has all required columns (team_id, acknowledged_at, etc.)</li>
+                    <li>RLS policies: Ensure proper Row Level Security policies are configured</li>
+                    <li>Foreign keys: Ensure servers table relationship is set up correctly</li>
+                  </ul>
+                </div>
+              )}
+            </div>
           </AlertDescription>
         </AlertUI>
+
+        <Button onClick={refreshAlerts} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Retry
+        </Button>
       </div>
     );
   }

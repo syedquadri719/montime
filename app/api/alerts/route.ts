@@ -70,27 +70,53 @@ export async function GET(request: NextRequest) {
         .limit(100);
 
       if (error) {
+        console.error('Database error fetching alerts:', error);
+
         if (error.message?.includes('relation') || error.message?.includes('does not exist')) {
           return NextResponse.json({
             alerts: [],
             message: 'Alerts table not yet configured. Please set up the database schema.'
           }, { status: 200 });
         }
+
+        if (error.message?.includes('column') && error.message?.includes('does not exist')) {
+          console.error('Column missing in alerts table. Check schema:', error.message);
+          return NextResponse.json({
+            alerts: [],
+            message: 'Alerts table schema needs updating. Please check the database setup.',
+            details: error.message
+          }, { status: 200 });
+        }
+
+        if (error.code === 'PGRST116') {
+          console.error('RLS policy or permission issue:', error);
+          return NextResponse.json({
+            alerts: [],
+            message: 'Unable to access alerts. Check database permissions.'
+          }, { status: 200 });
+        }
+
         throw error;
       }
 
       return NextResponse.json({ alerts: alerts || [] }, { status: 200 });
     } catch (dbError: any) {
+      console.error('Caught database error:', dbError);
+
       if (dbError.message?.includes('relation') || dbError.message?.includes('does not exist')) {
         return NextResponse.json({
           alerts: [],
           message: 'Alerts table not yet configured.'
         }, { status: 200 });
       }
+
       throw dbError;
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching alerts:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({
+      error: 'Internal server error',
+      details: error?.message || 'Unknown error'
+    }, { status: 500 });
   }
 }
