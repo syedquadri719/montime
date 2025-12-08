@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,7 @@ interface Server {
 }
 
 export default function GroupsPage() {
+  const router = useRouter();
   const [groups, setGroups] = useState<Group[]>([]);
   const [servers, setServers] = useState<Server[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +36,7 @@ export default function GroupsPage() {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [formData, setFormData] = useState({ name: '', description: '', color: '#3B82F6' });
   const [assignedServers, setAssignedServers] = useState<Record<string, string[]>>({});
+  const [serverStatusMap, setServerStatusMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchGroups();
@@ -68,6 +71,11 @@ export default function GroupsPage() {
 
       if (response.ok) {
         setServers(data.servers || []);
+        const statusMap: Record<string, string> = {};
+        (data.servers || []).forEach((server: any) => {
+          statusMap[server.id] = server.status;
+        });
+        setServerStatusMap(statusMap);
       }
     } catch (error) {
       console.error('Failed to fetch servers:', error);
@@ -215,10 +223,17 @@ export default function GroupsPage() {
     setIsEditOpen(true);
   };
 
-  const openAssignDialog = (group: Group) => {
+  const openAssignDialog = (group: Group, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setSelectedGroup(group);
     fetchGroupServers(group.id);
     setIsAssignOpen(true);
+  };
+
+  const getGroupServerStats = (groupId: string) => {
+    const serverIds = assignedServers[groupId] || [];
+    const onlineCount = serverIds.filter(id => serverStatusMap[id] === 'online').length;
+    return { online: onlineCount, total: serverIds.length };
   };
 
   if (loading) {
@@ -292,52 +307,75 @@ export default function GroupsPage() {
         </Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {groups.map((group) => (
-            <Card key={group.id}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="h-4 w-4 rounded-full"
-                      style={{ backgroundColor: group.color }}
-                    />
-                    <CardTitle>{group.name}</CardTitle>
+          {groups.map((group) => {
+            const stats = getGroupServerStats(group.id);
+            return (
+              <Card
+                key={group.id}
+                className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                onClick={() => router.push(`/dashboard/groups/${group.id}`)}
+              >
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-4 w-4 rounded-full"
+                        style={{ backgroundColor: group.color }}
+                      />
+                      <CardTitle>{group.name}</CardTitle>
+                    </div>
+                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => openAssignDialog(group, e)}
+                      >
+                        <Users className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEditDialog(group);
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteGroup(group.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openAssignDialog(group)}
-                    >
-                      <Users className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEditDialog(group)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteGroup(group.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-slate-600 mb-3">
+                    {group.description || 'No description'}
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="secondary">
+                      {stats.total} {stats.total === 1 ? 'server' : 'servers'}
+                    </Badge>
+                    {stats.total > 0 && (
+                      <div className="flex items-center gap-1.5 text-sm">
+                        <div className="h-2 w-2 rounded-full bg-green-500" />
+                        <span className="text-slate-600">
+                          {stats.online} online
+                        </span>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-slate-600 mb-3">
-                  {group.description || 'No description'}
-                </p>
-                <Badge variant="secondary">
-                  {assignedServers[group.id]?.length || 0} servers
-                </Badge>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
