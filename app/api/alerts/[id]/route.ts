@@ -48,18 +48,17 @@ export async function PUT(
         updateData.resolved_by = user.id;
       }
 
-      let query = supabaseAdmin
+      const { data: alert, error } = await supabaseAdmin
         .from('alerts')
         .update(updateData)
-        .eq('id', params.id);
-
-      if (filter.useTeam && filter.teamId) {
-        query = query.eq('team_id', filter.teamId);
-      } else {
-        query = query.eq('user_id', user.id);
-      }
-
-      const { data: alert, error } = await query.select().maybeSingle();
+        .eq('id', params.id)
+        .or(
+          filter.useTeam && filter.teamId
+            ? `team_id.eq.${filter.teamId},user_id.eq.${user.id}`
+            : `user_id.eq.${user.id}`
+        )
+        .select()
+        .maybeSingle();
 
       if (error) {
         if (error.message?.includes('relation') || error.message?.includes('does not exist')) {
@@ -117,18 +116,15 @@ export async function DELETE(
     const supabaseAdmin = getSupabaseAdmin();
 
     try {
-      let query = supabaseAdmin
+      const { error } = await supabaseAdmin
         .from('alerts')
         .delete()
-        .eq('id', params.id);
-
-      if (filter.useTeam && filter.teamId) {
-        query = query.eq('team_id', filter.teamId);
-      } else {
-        query = query.eq('user_id', user.id);
-      }
-
-      const { error } = await query;
+        .eq('id', params.id)
+        .or(
+          filter.useTeam && filter.teamId
+            ? `team_id.eq.${filter.teamId},user_id.eq.${user.id}`
+            : `user_id.eq.${user.id}`
+        );
 
       if (error) {
         if (error.message?.includes('relation') || error.message?.includes('does not exist')) {
