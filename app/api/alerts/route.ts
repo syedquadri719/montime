@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
         `);
 
       if (filter.useTeam && filter.teamId) {
-        query = query.eq('team_id', filter.teamId);
+        query = query.or(`team_id.eq.${filter.teamId},user_id.eq.${user.id}`);
       } else {
         query = query.eq('user_id', user.id);
       }

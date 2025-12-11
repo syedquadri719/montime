@@ -185,7 +185,7 @@ export async function getRecentAlerts(userId: string, limit: number = 10) {
       `);
 
     if (filter.useTeam && filter.teamId) {
-      query = query.eq('team_id', filter.teamId);
+      query = query.or(`team_id.eq.${filter.teamId},user_id.eq.${userId}`);
     } else {
       query = query.eq('user_id', userId);
     }
@@ -224,7 +224,7 @@ export async function getAlertSettings(userId: string, serverId?: string, groupI
     }
 
     if (filter.useTeam && filter.teamId) {
-      query = query.eq('team_id', filter.teamId);
+      query = query.or(`team_id.eq.${filter.teamId},user_id.eq.${userId}`);
     } else {
       query = query.eq('user_id', userId);
     }
