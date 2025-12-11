@@ -18,11 +18,12 @@ export default async function DashboardPage() {
     .select("*")
     .eq("user_id", user.id);
 
-  // Fetch alerts (latest 10)
+  // Fetch unresolved alerts (latest 10)
   const { data: alerts } = await supabaseAdmin
     .from("alerts")
     .select("*")
     .eq("user_id", user.id)
+    .eq("resolved", false)
     .order("created_at", { ascending: false })
     .limit(10);
 

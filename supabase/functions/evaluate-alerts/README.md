@@ -47,39 +47,47 @@ To add the Resend API key:
    - Go to Project Settings > Edge Functions > Environment Variables
    - Add `RESEND_API_KEY` with your key
 
-### 3. Set Up Cron Job
+### 3. Set Up Cron Job (CRITICAL - Required for Automatic Alerts)
 
-Create a cron schedule in Supabase to run this function every minute:
+⚠️ **IMPORTANT**: Without this step, alerts will NOT be generated automatically. You must set up a cron job to run the evaluation function regularly.
 
-**Using Supabase Dashboard:**
+**Option 1: Using Supabase Dashboard (Recommended)**
 
-1. Go to your Supabase project
-2. Navigate to Database > Extensions
+1. Go to your Supabase project dashboard
+2. Navigate to **Database** > **Extensions**
 3. Enable `pg_cron` extension if not already enabled
-4. Go to SQL Editor and run:
+4. Go to **SQL Editor** and run this SQL:
 
 ```sql
--- Enable pg_cron extension
+-- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS pg_cron;
+CREATE EXTENSION IF NOT EXISTS http;
 
--- Create a cron job to run every minute
+-- Get your project URL and key from .env file
+-- Then create a cron job to run every minute
 SELECT cron.schedule(
   'evaluate-alerts-every-minute',
   '* * * * *',  -- Every minute
   $$
   SELECT
     net.http_post(
-      url:='https://YOUR_PROJECT_REF.supabase.co/functions/v1/evaluate-alerts',
-      headers:='{"Content-Type": "application/json", "Authorization": "Bearer YOUR_ANON_KEY"}'::jsonb,
+      url:='https://zpkximqzejebvhblmysg.supabase.co/functions/v1/evaluate-alerts',
+      headers:='{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwa3hpbXF6ZWplYnZoYmxteXNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI3NTEwNzQsImV4cCI6MjA0ODMyNzA3NH0.fKvGAJ7PF1vxhIpYbwD76e2E1mY3Aw6v7MzI9EJCT3U"}'::jsonb,
       body:='{}'::jsonb
     ) AS request_id;
   $$
 );
 ```
 
-Replace:
-- `YOUR_PROJECT_REF` with your Supabase project reference (e.g., `sxyuivpzhsrgjzhznbj`)
-- `YOUR_ANON_KEY` with your anon/public API key
+**Option 2: Manual Testing (Temporary Solution)**
+
+Until you set up the cron job, you can manually trigger the alert evaluation by running:
+
+```bash
+curl -X POST https://zpkximqzejebvhblmysg.supabase.co/functions/v1/evaluate-alerts \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwa3hpbXF6ZWplYnZoYmxteXNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI3NTEwNzQsImV4cCI6MjA0ODMyNzA3NH0.fKvGAJ7PF1vxhIpYbwD76e2E1mY3Aw6v7MzI9EJCT3U" \
+  -H "Content-Type: application/json"
+```
 
 **Alternative: Using Supabase CLI:**
 

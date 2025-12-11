@@ -322,11 +322,11 @@ export default function AlertsPage() {
                     key={alert.id}
                     className="border rounded-lg p-4 space-y-3 bg-white hover:shadow-md transition-shadow"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3 flex-1">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
                         {getAlertIcon(alert.severity)}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <span className="font-semibold">
                               {getAlertTypeLabel(alert.type)}
                             </span>
@@ -345,7 +345,7 @@ export default function AlertsPage() {
                           <p className="text-sm text-slate-700 mb-2">
                             {alert.message}
                           </p>
-                          <div className="flex items-center gap-4 text-xs text-slate-500">
+                          <div className="flex items-center gap-4 text-xs text-slate-500 flex-wrap">
                             {alert.servers && (
                               <div className="flex items-center gap-1">
                                 <Server className="h-3 w-3" />
@@ -365,12 +365,13 @@ export default function AlertsPage() {
                         </div>
                       </div>
                       {!alert.resolved && (
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-shrink-0">
                           {!alert.acknowledged && (
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => acknowledgeAlert(alert.id)}
+                              className="whitespace-nowrap"
                             >
                               Acknowledge
                             </Button>
@@ -378,6 +379,7 @@ export default function AlertsPage() {
                           <Button
                             size="sm"
                             onClick={() => resolveAlert(alert.id)}
+                            className="whitespace-nowrap"
                           >
                             Resolve
                           </Button>
