@@ -125,8 +125,8 @@ async function sendAlertEmail(
 
   emailBody += `
     <hr>
-    <p>View your dashboard: <a href="https://montime.io/dashboard">https://montime.io/dashboard</a></p>
-    <p style="color: #666; font-size: 12px;">This is an automated alert from Montime.io</p>
+    <p>View your dashboard: <a href=\"https://montime.io/dashboard\">https://montime.io/dashboard</a></p>
+    <p style=\"color: #666; font-size: 12px;\">This is an automated alert from Montime.io</p>
   `;
 
   for (const email of recipients) {
@@ -292,7 +292,7 @@ Deno.serve(async (req: Request) => {
 
       const { data: recentMetrics } = await supabase
         .from('metrics')
-        .select('cpu_usage, memory_usage, disk_usage, created_at')
+        .select('cpu, memory, disk, created_at')
         .eq('server_id', server.id)
         .gte('created_at', lookbackTime.toISOString())
         .order('created_at', { ascending: false });
@@ -301,9 +301,9 @@ Deno.serve(async (req: Request) => {
         continue;
       }
 
-      const maxCpu = Math.max(...recentMetrics.map(m => m.cpu_usage || 0));
-      const maxMemory = Math.max(...recentMetrics.map(m => m.memory_usage || 0));
-      const maxDisk = Math.max(...recentMetrics.map(m => m.disk_usage || 0));
+      const maxCpu = Math.max(...recentMetrics.map(m => m.cpu || 0));
+      const maxMemory = Math.max(...recentMetrics.map(m => m.memory || 0));
+      const maxDisk = Math.max(...recentMetrics.map(m => m.disk || 0));
 
       const alertCondition = evaluateMetrics(
         maxCpu > 0 ? maxCpu : null,

@@ -50,9 +50,10 @@ export async function POST(request: NextRequest) {
 
     const metricsData: any = {
       server_id: server.id,
-      cpu_usage: parseFloat(cpu),
-      memory_usage: parseFloat(memory),
-      disk_usage: parseFloat(disk)
+      cpu: parseFloat(cpu),
+      memory: parseFloat(memory),
+      disk: parseFloat(disk),
+      status
     };
 
     if (network_in !== undefined) metricsData.network_in = parseInt(network_in);
