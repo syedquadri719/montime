@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       (servers || []).map(async (server: any) => {
         const { data: latestMetric } = await supabaseAdmin
           .from('metrics')
-          .select('cpu, memory, disk, status, created_at')
+          .select('cpu_usage, memory_usage, disk_usage, status, created_at')
           .eq('server_id', server.id)
           .order('created_at', { ascending: false })
           .limit(1)

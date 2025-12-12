@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
 
     const metricsData: any = {
       server_id: server.id,
-      cpu: parseFloat(cpu),
-      memory: parseFloat(memory),
-      disk: parseFloat(disk),
+      cpu_usage: parseFloat(cpu),
+      memory_usage: parseFloat(memory),
+      disk_usage: parseFloat(disk),
       status
     };
 
