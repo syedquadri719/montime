@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Activity, Server, Bell, Settings, Users, LayoutDashboard, UsersRound } from 'lucide-react';
+import { Activity, Server, Bell, Settings, Users, LayoutDashboard, UsersRound, Globe } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const navItems = [
@@ -17,6 +17,11 @@ const navItems = [
     title: 'Servers',
     href: '/dashboard/servers',
     icon: Server,
+  },
+  {
+    title: 'Monitors',
+    href: '/dashboard/monitors',
+    icon: Globe,
   },
   {
     title: 'Groups',
