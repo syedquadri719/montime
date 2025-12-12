@@ -52,8 +52,7 @@ export async function POST(request: NextRequest) {
       server_id: server.id,
       cpu_usage: parseFloat(cpu),
       memory_usage: parseFloat(memory),
-      disk_usage: parseFloat(disk),
-      status
+      disk_usage: parseFloat(disk)
     };
 
     if (network_in !== undefined) metricsData.network_in = parseInt(network_in);
