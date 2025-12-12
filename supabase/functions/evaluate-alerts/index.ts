@@ -288,18 +288,27 @@ Deno.serve(async (req: Request) => {
         continue;
       }
 
-      const { data: latestMetric } = await supabase
+      const lookbackTime = new Date(Date.now() - 2 * 60 * 1000);
+
+      const { data: recentMetrics } = await supabase
         .from('metrics')
         .select('cpu_usage, memory_usage, disk_usage, created_at')
         .eq('server_id', server.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .gte('created_at', lookbackTime.toISOString())
+        .order('created_at', { ascending: false });
+
+      if (!recentMetrics || recentMetrics.length === 0) {
+        continue;
+      }
+
+      const maxCpu = Math.max(...recentMetrics.map(m => m.cpu_usage || 0));
+      const maxMemory = Math.max(...recentMetrics.map(m => m.memory_usage || 0));
+      const maxDisk = Math.max(...recentMetrics.map(m => m.disk_usage || 0));
 
       const alertCondition = evaluateMetrics(
-        latestMetric?.cpu_usage || null,
-        latestMetric?.memory_usage || null,
-        latestMetric?.disk_usage || null,
+        maxCpu > 0 ? maxCpu : null,
+        maxMemory > 0 ? maxMemory : null,
+        maxDisk > 0 ? maxDisk : null,
         server.last_seen_at,
         settings
       );
