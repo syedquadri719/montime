@@ -59,12 +59,11 @@ To add the Resend API key:
 4. Go to **SQL Editor** and run this SQL:
 
 ```sql
--- Enable required extensions
+-- Step 1: Enable required extensions
 CREATE EXTENSION IF NOT EXISTS pg_cron;
-CREATE EXTENSION IF NOT EXISTS http;
+CREATE EXTENSION IF NOT EXISTS pg_net;
 
--- Get your project URL and key from .env file
--- Then create a cron job to run every minute
+-- Step 2: Create a cron job to run every minute
 SELECT cron.schedule(
   'evaluate-alerts-every-minute',
   '* * * * *',  -- Every minute
