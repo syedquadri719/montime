@@ -62,9 +62,15 @@ export default function MonitorDetailPage({ params }: { params: { id: string } }
   const handleRunCheck = async () => {
     setIsCheckRunning(true);
     try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
       const response = await fetch('/api/monitors/check', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseKey}`
+        },
         body: JSON.stringify({ monitorId: params.id })
       });
 
